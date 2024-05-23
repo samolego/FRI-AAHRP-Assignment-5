@@ -33,8 +33,7 @@ for p in problems:
 def main():
     for p in problems:
         xl, xu = p.bounds()
-        x0 = np.random.uniform(low=xl, high=xu, size=n_dimensions)
-        x_best_sim_an = simulated_annealing(p, x0, np.array([xl, xu]), max_iter=10000)
+        x_best_sim_an = simulated_annealing(p, np.array([xl, xu]), max_iter=10000)
         evald = np.sum(p.evaluate(x_best_sim_an))
         # print("Objective value at best point: ", sum(p.evaluate(x_best_sim_an)))
         x_b_sa_rounded = np.round(evald, 2)
@@ -72,15 +71,16 @@ def plot_function(DF):
     plt.show()
 
 
-def simulated_annealing(DF, x0, bounds, initial_temperature=100, cooling_rate=0.99, max_iter=1000, neighbor_range=0.1):
+def simulated_annealing(DF, bounds, num_iters=10, initial_temperature=100, cooling_rate=0.99, max_iter=1000, neighbor_range=0.1):
     """
     Runs a simulated annealing algorithm on the provided function.
     :param DF: Function to be optimized
-    :param x0: A (random) starting point
     :param bounds: The bounds of the function
+    :param num_iters: Number of iterations to run the algorithm
     :param initial_temperature: The initial temperature
     :param cooling_rate: Cooling rate of the temperature
     :param max_iter: Maximum number of iterations of the algorithm
+    :param neighbor_range: Range of the neighborhood
     :return: The best point found
     """
 
@@ -89,33 +89,43 @@ def simulated_annealing(DF, x0, bounds, initial_temperature=100, cooling_rate=0.
             return 1.0
         return math.exp((old_cost - new_cost) / temp)
 
-    x = x0.copy()
-    best_x = x0.copy()
-    best_f = np.sum(DF.evaluate(x, time=time))
-    temperature = initial_temperature
 
-    for i in range(max_iter):
-        # randomly perturb the current solution within the bounds
-        perturbation = np.random.uniform(-neighbor_range, neighbor_range, size=x.shape)
-        x_new = x + perturbation
-        x_perturbed = np.clip(x_new, bounds[0], bounds[1])
+    x0 = np.random.uniform(low=bounds[0], high=bounds[1], size=n_dimensions)
+    best_run_x = x0.copy()
 
-        # evaluate the perturbed solution
-        # Todo - use sum_of_pareto_functions function
-        f_perturbed = np.sum(DF.evaluate(x_perturbed))
-        f = np.sum(DF.evaluate(x))
+    for _ in range(num_iters):
+        x = x0.copy()
+        best_x = x0.copy()
+        best_f = np.sum(DF.evaluate(x, time=time))
+        temperature = initial_temperature
 
-        # accept if the chance for new solution is high enough
-        if acceptance_probability(f, f_perturbed, temperature) > np.random.rand():
-            x = x_perturbed.copy()
-            if f_perturbed < best_f:
-                best_x = x_perturbed.copy()
-                best_f = f_perturbed
+        for i in range(max_iter):
+            # randomly perturb the current solution within the bounds
+            perturbation = np.random.uniform(-neighbor_range, neighbor_range, size=x.shape)
+            x_new = x + perturbation
+            x_perturbed = np.clip(x_new, bounds[0], bounds[1])
 
-        # lower the temperature
-        temperature *= cooling_rate
+            # evaluate the perturbed solution
+            # Todo - use sum_of_pareto_functions function
+            f_perturbed = np.sum(DF.evaluate(x_perturbed))
+            f = np.sum(DF.evaluate(x))
 
-    return best_x
+            # accept if the chance for new solution is high enough
+            if acceptance_probability(f, f_perturbed, temperature) > np.random.rand():
+                x = x_perturbed.copy()
+                if f_perturbed < best_f:
+                    best_x = x_perturbed.copy()
+                    best_f = f_perturbed
+
+            # lower the temperature
+            temperature *= cooling_rate
+
+        if np.sum(DF.evaluate(best_x)) < np.sum(DF.evaluate(best_run_x)):
+            best_run_x = best_x.copy()
+
+        x0 = np.random.uniform(low=bounds[0], high=bounds[1], size=n_dimensions)
+
+    return best_run_x
 
 
 if __name__ == '__main__':
