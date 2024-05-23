@@ -35,9 +35,8 @@ def main():
         xl, xu = p.bounds()
         x_best_sim_an = simulated_annealing(p, np.array([xl, xu]), max_iter=10000)
         evald = np.sum(p.evaluate(x_best_sim_an))
-        # print("Objective value at best point: ", sum(p.evaluate(x_best_sim_an)))
-        x_b_sa_rounded = np.round(evald, 2)
-        print(x_b_sa_rounded)
+        evald = np.round(evald, 2)
+        print(evald)
 
 
 # Visualization -----------------------------------------------------
@@ -106,7 +105,7 @@ def simulated_annealing(DF, bounds, num_iters=10, initial_temperature=100, cooli
             x_perturbed = np.clip(x_new, bounds[0], bounds[1])
 
             # evaluate the perturbed solution
-            # Todo - use sum_of_pareto_functions function
+            # Todo - ok to use instead sum_of_pareto_functions function?
             f_perturbed = np.sum(DF.evaluate(x_perturbed))
             f = np.sum(DF.evaluate(x))
 
