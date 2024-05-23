@@ -101,8 +101,9 @@ def simulated_annealing(DF, x0, bounds, initial_temperature=100, cooling_rate=0.
         x_perturbed = np.clip(x_new, bounds[0], bounds[1])
 
         # evaluate the perturbed solution
-        f_perturbed = sum_of_pareto_functions(DF, x_perturbed)  #np.sum(DF.evaluate(x_perturbed))
-        f = sum_of_pareto_functions(DF, x)  #np.sum(DF.evaluate(x))
+        # Todo - use sum_of_pareto_functions function
+        f_perturbed = np.sum(DF.evaluate(x_perturbed))
+        f = np.sum(DF.evaluate(x))
 
         # accept if the chance for new solution is high enough
         if acceptance_probability(f, f_perturbed, temperature) > np.random.rand():
