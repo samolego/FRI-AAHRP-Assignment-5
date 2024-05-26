@@ -1,6 +1,5 @@
 import math
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pymoo.problems.dynamic.df as dfs
 
@@ -31,44 +30,56 @@ for p in problems:
 
 
 def main():
+    points = []
     for p in problems:
         xl, xu = p.bounds()
-        x_best_sim_an = simulated_annealing(p, np.array([xl, xu]), max_iter=10000)
+        x_best_sim_an = simulated_annealing(p, np.array([xl, xu]), max_iter=1000)
         evald = np.sum(p.evaluate(x_best_sim_an))
         evald = np.round(evald, 2)
-        print(evald)
+        points.append(x_best_sim_an)
+        # Print evald without newline
+        print(evald, end='\t')
+    print()
+
+    # Save points file
+    with open('simulated_annealing_points.txt', 'w') as f:
+        for point in points:
+            # Separate point coordinates by tab
+            f.write('\t'.join([str(coord) for coord in point]) + '\n')
+
+
 
 
 # Visualization -----------------------------------------------------
 # Calculates a 2d slice of a n_dimensions-dimensional space
-def sum_of_pareto_functions(DF, x):
-    if len(DF.xl) == 2:
-        return [sum(z) for z in DF.evaluate(np.array(x))]
-    else:
-        xm = list((DF.xl + DF.xu) / 2)
-        x = [[a, b, *xm[2:]] for a, b in x]
-        return [sum(z) for z in DF.evaluate(np.array(x))]
-
+#def sum_of_pareto_functions(DF, x):
+#    if len(DF.xl) == 2:
+#        return [sum(z) for z in DF.evaluate(np.array(x))]
+#    else:
+#        xm = list((DF.xl + DF.xu) / 2)
+#        x = [[a, b, *xm[2:]] for a, b in x]
+#        return [sum(z) for z in DF.evaluate(np.array(x))]
+#
 
 # Plots a 2d graph of a function (slice)
-def plot_function(DF):
-    d = 400
-    x = np.linspace(DF.xl[0], DF.xu[0], d)
-    y = np.linspace(DF.xl[1], DF.xu[1], d)
-    X, Y = np.meshgrid(x, y)
-    points = [[x, y] for x, y in zip(X.flatten(), Y.flatten())]
-    Z = sum_of_pareto_functions(DF, points)
-    Z = np.array(Z).reshape((d, d))
-    print(Z)
-
-    # Plotting the functions
-    fig, axs = plt.subplots(1, 1, figsize=(15, 15))
-    axs.contourf(X, Y, Z, levels=50, cmap='viridis')
-    axs.set_title(DF.name)
-    axs.set_xlabel('x')
-    axs.set_ylabel('y')
-    plt.show()
-
+#def plot_function(DF):
+#    d = 400
+#    x = np.linspace(DF.xl[0], DF.xu[0], d)
+#    y = np.linspace(DF.xl[1], DF.xu[1], d)
+#    X, Y = np.meshgrid(x, y)
+#    points = [[x, y] for x, y in zip(X.flatten(), Y.flatten())]
+#    Z = sum_of_pareto_functions(DF, points)
+#    Z = np.array(Z).reshape((d, d))
+#    print(Z)
+#
+#    # Plotting the functions
+#    fig, axs = plt.subplots(1, 1, figsize=(15, 15))
+#    axs.contourf(X, Y, Z, levels=50, cmap='viridis')
+#    axs.set_title(DF.name)
+#    axs.set_xlabel('x')
+#    axs.set_ylabel('y')
+#    plt.show()
+#
 
 def simulated_annealing(DF, bounds, num_iters=10, initial_temperature=100, cooling_rate=0.99, max_iter=1000, neighbor_range=0.1):
     """
@@ -105,7 +116,6 @@ def simulated_annealing(DF, bounds, num_iters=10, initial_temperature=100, cooli
             x_perturbed = np.clip(x_new, bounds[0], bounds[1])
 
             # evaluate the perturbed solution
-            # Todo - ok to use instead sum_of_pareto_functions function?
             f_perturbed = np.sum(DF.evaluate(x_perturbed))
             f = np.sum(DF.evaluate(x))
 
